@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<!-- Any copyright is dedicated to the Public Domain.
+   - http://creativecommons.org/publicdomain/zero/1.0/ -->
+<html>
+<head>
+<script src="jpg.js"></script>
+<script>
+function arrayToTable(arr) {
+    var quant = "";
+    for (var i=0; i<arr.length; i++) {
+
+	    if ((i) % 8 == 0)
+	     quant += "<tr>"
+	    quant += "<td>" + arr[i] + "</td>";
+	    if ((i+1) % 8 == 0)
+	     quant += "</tr>"
+    }
+    return quant;
+
+}
+var j;
+function displayImage(canvasId, url) {
+  j = new JpegImage();
+  j.onload = function() {
+    var c = document.getElementById(canvasId);
+    c.width = j.width;
+    c.height = j.height;
+    var ctx = c.getContext("2d");
+    var d = ctx.getImageData(0,0,j.width,j.height);
+    j.copyToImageData(d);
+    ctx.putImageData(d, 0, 0);
+    var quant = arrayToTable(j.frame.components[1].quantizationTable);
+    document.getElementById("info").innerHTML = "<table>" + quant + "</table>";
+    document.getElementById("info").innerHTML += "maxH: " + j.frame.maxH + " , maxV: " + j.frame.maxV;
+    var grid = "";
+    for (var y=0; y<j.height/8; y++) {
+	    grid += "<tr>"
+	    for (var x=0; x<j.width/8; x++) {
+		    grid += "<td id=" + (x*j.width/8 + y) + " width=5 height=5></td>"
+	    }
+	    grid += "</tr>"
+    }
+	    
+    document.getElementById("grid").innerHTML = grid;
+  };
+  j.load(url);
+}
+
+function variance(samples)
+{
+	var n = samples.length;
+	var sum = 0;
+	var sum_sqr = 0;
+
+	for (var i=0; i<n; i++) {
+		var x = samples[i];
+		sum += x;
+		sum_sqr += x*x;
+	}
+	return (sum_sqr - ((sum*sum)/n))/(n-1);
+}
+
+function loadImages() {
+  displayImage("c1", "drink.jpg");
+}
+function blockSelect(e) {
+	row = e.target.id % (j.width/8);
+	column = e.target.id / (j.width/8) | 0;
+	component = j.frame.components[1];
+	var sizeStr = ""
+	var bitSum = 0;
+	for (var i = 0; i < j.frame.componentsOrder.length; i++) {
+		var bits = j.frame.components[j.frame.componentsOrder[i]].bitsPerBlock[row][column];
+		sizeStr += "size(" + j.frame.componentsOrder[i] +  ") : " + bits + " bits ";
+		bitSum += bits;
+	}
+	sizeStr += "total: " + bitSum + " bits<br>";
+	document.getElementById("blockinfo").innerHTML = sizeStr
+	var dctOut = "";
+	dct = component.blocks[row][column];
+	for (var i=0; i<dct.length; i++) {
+		dctOut += dct[i] + ", ";
+	}
+	document.getElementById("blockinfo").innerHTML += "variance: " + variance(dct.subarray(1)) + "<br>";
+	document.getElementById("blockinfo").innerHTML += "variance/bit: " + variance(dct.subarray(1))/component.bitsPerBlock[row][column] + "<br>";
+	document.getElementById("blockinfo").innerHTML += "<table>" + arrayToTable(dct) + "</table>";
+}
+</script>
+</head>
+<body onload="loadImages()">
+	<div style="position:relative">
+  <canvas id="c1"></canvas>
+  <style>
+	  table
+	  {
+		  border-collapse:collapse;
+	  }
+	  table, th, td
+	  {
+		  /* we use 'dashed' here so that
+		  the solid will clobber it in hover */
+		  border: 1px dashed transparent; 
+	  }
+	  table:hover, th:hover, td:hover
+	  {
+		  border: 1px solid red;
+	  }
+  </style>
+  <table onmousemove="blockSelect(event)" style="position:absolute; top:0px; border: solid black; border-width: 1px" id="grid"><tr>
+		  <td width=8 height=8></td>
+		  <td></td>
+		  <td></td>
+		  <td></td>
+		  <td></td>
+  </tr>
+  </table>
+  </div>
+  <div id="blockinfo">
+  </div>
+  <div id="info">
+  </div>
+</body></html>

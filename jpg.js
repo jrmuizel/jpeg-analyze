@@ -100,7 +100,9 @@ var JpegImage = (function jpegImage() {
     var maxH = frame.maxH, maxV = frame.maxV;
 
     var startOffset = offset, bitsData = 0, bitsCount = 0;
+    var bitsRead = 0;
     function readBit() {
+      bitsRead++;
       if (bitsCount > 0) {
         bitsCount--;
         return (bitsData >> bitsCount) & 1;
@@ -124,6 +126,7 @@ var JpegImage = (function jpegImage() {
           return node;
         if (typeof node !== 'object')
           throw "invalid huffman sequence";
+
       }
       return null;
     }
@@ -255,12 +258,16 @@ var JpegImage = (function jpegImage() {
       var mcuCol = mcu % mcusPerLine;
       var blockRow = mcuRow * component.v + row;
       var blockCol = mcuCol * component.h + col;
+      bitsRead = 0;
       decode(component, component.blocks[blockRow][blockCol]);
+      component.bitsPerBlock[blockRow][blockCol] = bitsRead;
     }
     function decodeBlock(component, decode, mcu) {
       var blockRow = (mcu / component.blocksPerLine) | 0;
       var blockCol = mcu % component.blocksPerLine;
+      bitsRead = 0;
       decode(component, component.blocks[blockRow][blockCol]);
+      component.bitsPerBlock[blockRow][blockCol] = bitsRead;
     }
 
     var componentsLength = components.length;
@@ -294,7 +301,9 @@ var JpegImage = (function jpegImage() {
       if (componentsLength == 1) {
         component = components[0];
         for (n = 0; n < resetInterval; n++) {
+          bitsRead = 0;
           decodeBlock(component, decodeFn, mcu);
+          //alert(bitsRead);
           mcu++;
         }
       } else {
@@ -305,7 +314,9 @@ var JpegImage = (function jpegImage() {
             v = component.v;
             for (j = 0; j < v; j++) {
               for (k = 0; k < h; k++) {
+                bitsRead = 0;
                 decodeMcu(component, decodeFn, mcu, j, k);
+                //alert(bitsRead);
               }
             }
           }
@@ -563,15 +574,24 @@ var JpegImage = (function jpegImage() {
             var blocksPerLineForMcu = mcusPerLine * component.h;
             var blocksPerColumnForMcu = mcusPerColumn * component.v;
             var blocks = [];
+            var bitsPerBlock = [];
             for (var i = 0; i < blocksPerColumnForMcu; i++) {
               var row = [];
               for (var j = 0; j < blocksPerLineForMcu; j++)
                 row.push(new Int32Array(64));
               blocks.push(row);
             }
+            for (var i = 0; i < blocksPerColumnForMcu; i++) {
+              var row = [];
+              for (var j = 0; j < blocksPerLineForMcu; j++)
+                row.push(0);
+              bitsPerBlock.push(row);
+            }
+
             component.blocksPerLine = blocksPerLine;
             component.blocksPerColumn = blocksPerColumn;
             component.blocks = blocks;
+            component.bitsPerBlock = bitsPerBlock;
           }
         }
         frame.maxH = maxH;
@@ -756,6 +776,7 @@ var JpegImage = (function jpegImage() {
       this.jfif = jfif;
       this.adobe = adobe;
       this.components = [];
+      this.frame = frame;
       for (var i = 0; i < frame.componentsOrder.length; i++) {
         var component = frame.components[frame.componentsOrder[i]];
         this.components.push({
@@ -764,6 +785,10 @@ var JpegImage = (function jpegImage() {
           scaleY: component.v / frame.maxV
         });
       }
+    },
+    getBits: function getBits()
+    {
+      return this.components.bitsPerBlock;
     },
     getData: function getData(width, height) {
       function clampTo8bit(a) {
