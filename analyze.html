@@ -5,6 +5,21 @@
 <head>
 <script src="jpg.js"></script>
 <script>
+
+function handleFiles(files, id) {
+	// we only handle a single file
+	var file = files[0];
+	
+	var imageType =/image.jpeg/;
+	if (!file.type.match(imageType)) {
+		return false;
+	}
+
+	displayImage("c1", file);
+
+	return true;
+}
+
 function arrayToTable(arr) {
     var quant = "";
     for (var i=0; i<arr.length; i++) {
@@ -43,7 +58,7 @@ function displayImage(canvasId, url) {
 	    
     document.getElementById("grid").innerHTML = grid;
   };
-  j.load(url);
+  j.loadLocal(url);
 }
 
 function variance(samples)
@@ -61,7 +76,7 @@ function variance(samples)
 }
 
 function loadImages() {
-  displayImage("c1", "drink.jpg");
+  //displayImage("c1", "drink.jpg");
 }
 function blockSelect(e) {
 	row = e.target.id % (j.width/8);
@@ -70,9 +85,10 @@ function blockSelect(e) {
 	var sizeStr = ""
 	var bitSum = 0;
 	for (var i = 0; i < j.frame.componentsOrder.length; i++) {
-		var bits = j.frame.components[j.frame.componentsOrder[i]].bitsPerBlock[row][column];
+	        var components = j.frame.components[j.frame.componentsOrder[i]];
+		var bits = components.bitsPerBlock[row*components.v/j.frame.maxV | 0][column*components.h/j.frame.maxH | 0];
 		sizeStr += "size(" + j.frame.componentsOrder[i] +  ") : " + bits + " bits ";
-		bitSum += bits;
+		bitSum += bits*components.v/j.frame.maxV*components.h/j.frame.maxH;
 	}
 	sizeStr += "total: " + bitSum + " bits<br>";
 	document.getElementById("blockinfo").innerHTML = sizeStr
@@ -106,6 +122,7 @@ function blockSelect(e) {
 		  border: 1px solid red;
 	  }
   </style>
+  <input type="file" onchange="handleFiles(this.files, 1)">
   <table onmousemove="blockSelect(event)" style="position:absolute; top:0px; border: solid black; border-width: 1px" id="grid"><tr>
 		  <td width=8 height=8></td>
 		  <td></td>

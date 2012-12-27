@@ -528,6 +528,18 @@ var JpegImage = (function jpegImage() {
   }
 
   constructor.prototype = {
+    loadLocal: function loadLocal(file) {
+      var reader = new FileReader();
+      reader.onload = (function() {
+        // TODO catch parse error
+        var data = new Uint8Array(reader.result);
+        this.parse(data);
+        if (this.onload)
+          this.onload();
+      }).bind(this);
+      reader.readAsArrayBuffer(file);
+    },
+
     load: function load(path) {
       var xhr = new XMLHttpRequest();
       xhr.open("GET", path, true);
