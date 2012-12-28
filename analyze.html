@@ -44,8 +44,13 @@ function displayImage(canvasId, url) {
     var d = ctx.getImageData(0,0,j.width,j.height);
     j.copyToImageData(d);
     ctx.putImageData(d, 0, 0);
-    var quant = arrayToTable(j.frame.components[1].quantizationTable);
-    document.getElementById("info").innerHTML = "<table>" + quant + "</table>";
+    var quant = "";
+    for (var i = 0; i < j.frame.componentsOrder.length; i++) {
+	    var components = j.frame.components[j.frame.componentsOrder[i]];
+	    quant += "<table style='border: solid; margin: 1em; float:left'><caption>Quantization table "  + j.frame.componentsOrder[i] + "</caption>" + arrayToTable(components.quantizationTable) + "</table>";
+    }
+
+    document.getElementById("info").innerHTML = quant;
     document.getElementById("info").innerHTML += "maxH: " + j.frame.maxH + " , maxV: " + j.frame.maxV;
     var grid = "";
     for (var y=0; y<j.height/8; y++) {
@@ -122,7 +127,7 @@ function blockSelect(e) {
 		  border: 1px solid red;
 	  }
   </style>
-  <input type="file" onchange="handleFiles(this.files, 1)">
+  <input type="file" accept="image/jpeg" onchange="handleFiles(this.files, 1)">
   <table onmousemove="blockSelect(event)" style="position:absolute; top:0px; border: solid black; border-width: 1px" id="grid"><tr>
 		  <td width=8 height=8></td>
 		  <td></td>
