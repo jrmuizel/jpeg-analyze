@@ -4,6 +4,7 @@
 <html>
 <head>
 <script src="jpg.js"></script>
+<script src="quant.js"></script>
 <script>
 
 function handleFiles(files, id) {
@@ -47,7 +48,8 @@ function displayImage(canvasId, url) {
     var quant = "";
     for (var i = 0; i < j.frame.componentsOrder.length; i++) {
 	    var components = j.frame.components[j.frame.componentsOrder[i]];
-	    quant += "<table style='border: solid; margin: 1em; float:left'><caption>Quantization table "  + j.frame.componentsOrder[i] + "</caption>" + arrayToTable(components.quantizationTable) + "</table>";
+	    var quality = findMatchingQuality(components.quantizationTable);
+	    quant += "<table style='border: solid; margin: 1em; float:left'><caption>Quantization table "  + j.frame.componentsOrder[i] + " " + quality + "</caption>" + arrayToTable(components.quantizationTable) + "</table>";
     }
 
     document.getElementById("info").innerHTML = quant;
