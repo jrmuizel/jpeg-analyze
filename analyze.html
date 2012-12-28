@@ -54,7 +54,7 @@ function displayImage(canvasId, url) {
 
     document.getElementById("info").innerHTML = quant;
     document.getElementById("info").innerHTML += "maxH: " + j.frame.maxH + " , maxV: " + j.frame.maxV;
-    document.getElementById("info").innerHTML += "progressive: " + j.frame.progressive;
+    document.getElementById("info").innerHTML += "<br>progressive: " + j.frame.progressive;
     var grid = "";
     for (var y=0; y<j.height/8; y++) {
 	    grid += "<tr>"
