@@ -105,15 +105,38 @@ function blockSelect(e) {
 	for (var i=0; i<dct.length; i++) {
 		dctOut += dct[i] + ", ";
 	}
-	document.getElementById("blockinfo").innerHTML += "variance: " + variance(dct.subarray(1)) + "<br>";
-	document.getElementById("blockinfo").innerHTML += "variance/bit: " + variance(dct.subarray(1))/component.bitsPerBlock[row][column] + "<br>";
+	document.getElementById("blockinfo").innerHTML += "AC variance: " + variance(dct.subarray(1)) + "<br>";
+	document.getElementById("blockinfo").innerHTML += "AC variance/bit: " + variance(dct.subarray(1))/component.bitsPerBlock[row][column] + "<br>";
 	document.getElementById("blockinfo").innerHTML += "<table>" + arrayToTable(dct) + "</table>";
 }
 </script>
 </head>
 <body onload="loadImages()">
+  <input type="file" accept="image/jpeg" onchange="handleFiles(this.files, 1)">
 	<div style="position:relative">
   <canvas id="c1"></canvas>
+  <canvas id="c2" style="position:absolute; top:0px; left:0px;" width=1015 height=1000></canvas>
+  <script src="b.js"></script>
+  <script>
+	  function compute_color(i)
+	  {
+		  var k = i*2;
+		  if (k > 255)
+		  	k = 255;
+		  return [Math.floor(k), Math.floor(255-k), 0]
+	  }
+	  var ctx = document.getElementById("c2").getContext("2d");
+	  for (var i=0; i<block_rmse.length; i++) {
+		  var x = block_rmse[i][0];
+		  var y = block_rmse[i][1];
+		  var size = block_rmse[i][2];
+		  var rmse = block_rmse[i][3];
+		  var rgb = compute_color(rmse);
+		  ctx.fillStyle = "rgba(" + rgb[0] + "," + rgb[1] + "," + rgb[2] + ",0.5)";
+		  ctx.fillRect(x,y,size, size);
+
+	  }
+  </script>
   <style>
 	  table
 	  {
@@ -130,7 +153,6 @@ function blockSelect(e) {
 		  border: 1px solid red;
 	  }
   </style>
-  <input type="file" accept="image/jpeg" onchange="handleFiles(this.files, 1)">
   <table onmousemove="blockSelect(event)" style="position:absolute; top:0px; border: solid black; border-width: 1px" id="grid"><tr>
 		  <td width=8 height=8></td>
 		  <td></td>

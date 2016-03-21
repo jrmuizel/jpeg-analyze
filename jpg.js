@@ -701,8 +701,8 @@ var JpegImage = (function jpegImage() {
             frame = {};
             frame.progressive = (fileMarker === 0xFFC2);
             frame.precision = data[offset++];
-            frame.scanLines = readUint16();
-            frame.samplesPerLine = readUint16();
+            frame.scanLines = 8*(((readUint16()+7)/8)|0);
+            frame.samplesPerLine = 8*(((readUint16()+7)/8)|0);
             frame.components = {};
             frame.componentsOrder = [];
             var componentsCount = data[offset++], componentId;
